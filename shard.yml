@@ -1,0 +1,17 @@
+name: wren
+version: 0.1.0
+
+authors:
+  - Margret Riegert <margret@eowyn.net>
+
+crystal: '>= 1.10.1'
+
+license: MIT
+
+dependencies:
+  libgen:
+    github: olbat/libgen
+    commit: 1357f34
+
+scripts:
+  postinstall: ./src/ext/generate.sh

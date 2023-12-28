@@ -1,0 +1,1 @@
+require "./wren.cr"

@@ -1,0 +1,17 @@
+---
+name: LibWren
+ldflags: "#{__DIR__}/../ext/wren.a -lm"
+definitions:
+  wren:
+    includes:
+    - src/ext/wren/src/include/wren.h
+    prefixes: [ "wren", "Wren", "WREN" ]
+rename:
+  rules:
+    "*":
+    - pattern: ^wren_
+      replacement: ""
+    - pattern: ^Wren
+      replacement: ""
+options:
+  import_docstrings: brief

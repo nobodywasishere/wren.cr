@@ -1,2 +1,6 @@
 require "./lib_wren/lib_wren.cr"
-require "./wren/wren.cr"
+
+require "./wren/config.cr"
+require "./wren/user_data.cr"
+require "./wren/vm.cr"
+

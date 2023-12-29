@@ -87,36 +87,6 @@ describe Wren do
       raise Exception.new(String.new(msg))
     end
 
-    config.bind_foreign_method do |vm, mod, klass, static?, signature|
-      empty = ->(vm : Pointer(LibWren::Vm)) {}
-
-      case String.new(mod)
-      when "main"
-        case String.new(klass)
-        when "Math"
-          case static?
-          when 1
-            case String.new(signature)
-            when "add(_,_)"
-              ->(vm : Pointer(LibWren::Vm)) {
-                a = LibWren.get_slot_double(vm, 1)
-                b = LibWren.get_slot_double(vm, 2)
-                LibWren.set_slot_double(vm, 0, a + b)
-              }
-            else
-              empty
-            end
-          else
-            empty
-          end
-        else
-          empty
-        end
-      else
-        empty
-      end
-    end
-
     vm = Wren::VM.new(config)
 
     vm.interpret do
@@ -131,6 +101,12 @@ describe Wren do
         }
       }
       WREN
+    end
+
+    vm.bind_method("main", "Math", true, "add(_,_)") do |vm|
+      a = LibWren.get_slot_double(vm, 1)
+      b = LibWren.get_slot_double(vm, 2)
+      LibWren.set_slot_double(vm, 0, a + b)
     end
 
     twoplus_handle = LibWren.make_call_handle(vm._vm, "twoplustwo()")

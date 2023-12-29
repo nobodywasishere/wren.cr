@@ -18,7 +18,7 @@ lib LibWren
 
   # Sets the current fiber to be aborted, and uses the value in [slot] as the
   # runtime error object.
-  fun abort_fiber = wrenAbortFiber(vm : Vm*, slot : LibC::Int) : Void
+  fun abort_fiber = wrenAbortFiber(vm : Vm*, slot : LibC::Int) : Nil
 
   # Creates a handle that can be used to invoke a method with [signature] on
   # using a receiver and arguments that are set up on the stack.
@@ -28,7 +28,7 @@ lib LibWren
   #
   # When you are done with this handle, it must be released using
   # [wrenReleaseHandle].
-  fun call = wrenCall(vm : Vm*, method : Void*) : InterpretResult
+  fun call = wrenCall(vm : Vm*, method : Handle*) : InterpretResult
 
   # Immediately run the garbage collector to free unused memory.
   fun collect_garbage = wrenCollectGarbage(vm : Vm*)
@@ -39,7 +39,7 @@ lib LibWren
   # Does not shrink the stack if it has more than enough slots.
   #
   # It is an error to call this from a finalizer.
-  fun ensure_slots = wrenEnsureSlots(vm : Vm*, num_slots : LibC::Int) : Void
+  fun ensure_slots = wrenEnsureSlots(vm : Vm*, num_slots : LibC::Int) : Nil
 
   # Disposes of all resources is use by [vm], which was previously created by a
   # call to [wrenNewVM].
@@ -168,7 +168,7 @@ lib LibWren
 
   # Releases the reference stored in [handle]. After calling this, [handle] can
   # no longer be used.
-  fun release_handle = wrenReleaseHandle(vm : Vm*, handle : Handle*) : Void
+  fun release_handle = wrenReleaseHandle(vm : Vm*, handle : Handle*) : Nil
 
   # Removes a value from the map in [mapSlot], with the key from [keySlot],
   # and place it in [removedValueSlot]. If not found, [removedValueSlot] is
@@ -294,7 +294,7 @@ lib LibWren
   # WrenLoadModuleResult load_module_fn(WrenVM* vm, const char* name)
   alias LoadModuleFn = Proc(Vm*, LibC::Char*, LoadModuleResult)
 
-  alias ForeignMethodFn = Proc(Vm*, Void)
+  alias ForeignMethodFn = Proc(Vm*, Nil)
 
   # Returns a pointer to a foreign method on [className] in [module] with [signature].
   # WrenForeignMethodFn bind_foreign_method_fn(WrenVM* vm,
@@ -302,13 +302,16 @@ lib LibWren
   #     const char* signature);
   alias BindForeignMethodFn = Proc(Vm*, LibC::Char*, LibC::Char*, LibC::Int, LibC::Char*, ForeignMethodFn)
 
+  # Returns a pair of pointers to the foreign methods used to allocate and
+  # finalize the data for instances of [className] in resolved [module].
+  # WrenForeignClassMethods bind_foreign_class_fn(WrenVM* vm, const char* module, const char* className);
   alias BindForeignClassFn = Proc(Vm*, LibC::Char*, LibC::Char*, ForeignClassMethods)
 
-  alias WriteFn = Proc(Vm*, LibC::Char*, Void)
+  alias WriteFn = Proc(Vm*, LibC::Char*, Nil)
 
-  alias ErrorFn = Proc(Vm*, ErrorType, LibC::Char*, LibC::Int, LibC::Char*, Void)
+  alias ErrorFn = Proc(Vm*, ErrorType, LibC::Char*, LibC::Int, LibC::Char*, Nil)
 
-  alias FinalizerFn = Proc(Void*, Void)
+  alias FinalizerFn = Proc(Void*, Nil)
 
-  alias LoadModuleCompleteFn = Proc(Vm*, LibC::Char*, LoadModuleResult, Void)
+  alias LoadModuleCompleteFn = Proc(Vm*, LibC::Char*, LoadModuleResult, Nil)
 end

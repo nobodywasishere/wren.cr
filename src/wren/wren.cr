@@ -8,6 +8,10 @@ module Wren
     end
 
     macro bind_fn(name)
+      def {{ name.id }}=(proc : LibWren::{{ name.name.camelcase.id }}Fn)
+        @config.{{ name.id }}_fn = proc
+      end
+
       def {{ name.id }}(&block : LibWren::{{ name.name.camelcase.id }}Fn)
         @config.{{ name.id }}_fn = block
       end
@@ -30,10 +34,11 @@ module Wren
 
   class VM
     getter vm : Pointer(LibWren::Vm)
-    getter config : LibWren::Configuration
+    getter config : Config
 
     def initialize(@config)
-      @vm = LibWren.new_vm(pointerof(@config))
+      _config = @config.config
+      @vm = LibWren.new_vm(pointerof(_config))
     end
 
     def finalize
@@ -42,7 +47,10 @@ module Wren
 
     def interpret(mod : String = "main", &) : LibWren::InterpretResult
       script = yield
+      interpret(script, mod)
+    end
 
+    def interpret(script : String, mod : String = "main") : LibWren::InterpretResult
       LibWren.interpret(vm, mod.to_unsafe, script.to_unsafe)
     end
   end

@@ -98,7 +98,7 @@ lib LibWren
   #
   # This will prevent the object that is referred to from being garbage collected
   # until the handle is released by calling [wrenReleaseHandle()].
-  fun get_slot_handle = wrenGetSlotHandle(vm : Vm*, slot : LibC::Int) : Void*
+  fun get_slot_handle = wrenGetSlotHandle(vm : Vm*, slot : LibC::Int) : Handle*
 
   # Reads a string from [slot].
   #
@@ -158,7 +158,7 @@ lib LibWren
   #
   # When you are done with this handle, it must be released using
   # [wrenReleaseHandle].
-  fun make_call_handle = wrenMakeCallHandle(vm : Vm*, signature : LibC::Char*) : Void*
+  fun make_call_handle = wrenMakeCallHandle(vm : Vm*, signature : LibC::Char*) : Handle*
 
   # Creates a new Wren virtual machine using the given [configuration]. Wren
   # will copy the configuration data, so the argument passed to this can be
@@ -168,7 +168,7 @@ lib LibWren
 
   # Releases the reference stored in [handle]. After calling this, [handle] can
   # no longer be used.
-  fun release_handle = wrenReleaseHandle(vm : Vm*, handle : Void*) : Void
+  fun release_handle = wrenReleaseHandle(vm : Vm*, handle : Handle*) : Void
 
   # Removes a value from the map in [mapSlot], with the key from [keySlot],
   # and place it in [removedValueSlot]. If not found, [removedValueSlot] is
@@ -198,7 +198,7 @@ lib LibWren
   # Stores the value captured in [handle] in [slot].
   #
   # This does not release the handle for the value.
-  fun set_slot_handle = wrenSetSlotHandle(vm : Vm*, slot : LibC::Int, handle : Void*)
+  fun set_slot_handle = wrenSetSlotHandle(vm : Vm*, slot : LibC::Int, handle : Handle*)
 
   # Creates a new instance of the foreign class stored in [classSlot] with [size]
   # bytes of raw storage and places the resulting object in [slot].
@@ -267,16 +267,16 @@ lib LibWren
   # This is not necessarily the object's *class*, but instead its low level
   # representation type.
   enum Type
-    WREN_TYPE_BOOL
-    WREN_TYPE_NUM
-    WREN_TYPE_FOREIGN
-    WREN_TYPE_LIST
-    WREN_TYPE_MAP
-    WREN_TYPE_NULL
-    WREN_TYPE_STRING
+    BOOL
+    NUM
+    FOREIGN
+    LIST
+    MAP
+    NULL
+    STRING
 
     # The object is of a type that isn't accessible by the C API.
-    WREN_TYPE_UNKNOWN
+    UNKNOWN
   end
 
   enum ErrorType
@@ -296,6 +296,10 @@ lib LibWren
 
   alias ForeignMethodFn = Proc(Vm*, Void)
 
+  # Returns a pointer to a foreign method on [className] in [module] with [signature].
+  # WrenForeignMethodFn bind_foreign_method_fn(WrenVM* vm,
+  #     const char* module, const char* className, bool isStatic,
+  #     const char* signature);
   alias BindForeignMethodFn = Proc(Vm*, LibC::Char*, LibC::Char*, LibC::Int, LibC::Char*, ForeignMethodFn)
 
   alias BindForeignClassFn = Proc(Vm*, LibC::Char*, LibC::Char*, ForeignClassMethods)

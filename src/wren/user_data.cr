@@ -4,10 +4,10 @@ module Wren
   alias SlotHandles = Hash(String, Pointer(LibWren::Handle))
 
   struct UserData
-    property method_bindings = MethodBindings.new
-    property class_bindings = ClassBindings.new
-    property call_handles = SlotHandles.new
-    property slot_handles = SlotHandles.new
+    getter method_bindings = MethodBindings.new
+    getter class_bindings = ClassBindings.new
+    getter call_handles = SlotHandles.new
+    getter slot_handles = SlotHandles.new
 
     def method_sig(mod, klass, static, signature) : String
       mod = String.new(mod) unless mod.is_a?(String)

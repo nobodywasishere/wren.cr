@@ -1,6 +1,8 @@
 module Wren
   struct Config
     getter user_data : UserData = UserData.new
+
+    # :nodoc:
     getter _config : LibWren::Configuration
 
     def initialize
@@ -48,10 +50,6 @@ module Wren
     end
 
     macro bind_fn(name)
-      def {{ name.id }}=(proc : LibWren::{{ name.name.camelcase.id }}Fn)
-        @_config.{{ name.id }}_fn = proc
-      end
-
       def {{ name.id }}(&block : LibWren::{{ name.name.camelcase.id }}Fn)
         @_config.{{ name.id }}_fn = block
       end

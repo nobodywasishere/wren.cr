@@ -1,6 +1,8 @@
 module Wren
   class VM
+    # :nodoc:
     getter _vm : Pointer(LibWren::Vm)
+
     getter config : Config
 
     def initialize(@config = Config.new)
@@ -8,7 +10,7 @@ module Wren
       @_vm = LibWren.new_vm(pointerof(_config))
     end
 
-    def interpret(mod : String = "main", &) : LibWren::InterpretResult
+    def interpret(mod : String = "main", & : Proc(String)) : LibWren::InterpretResult
       script = yield
       interpret(script, mod)
     end
@@ -54,10 +56,12 @@ module Wren
       get_slot(0)
     end
 
-    def set_slot(slot, value)
+    private def set_slot(slot, value)
       case value
       when Float64
         LibWren.set_slot_double(_vm, slot, value)
+      when Int
+        LibWren.set_slot_double(_vm, slot, value.to_f64)
       when String
         LibWren.set_slot_bytes(_vm, slot, value.to_unsafe, value.size)
       when Bool
@@ -65,11 +69,11 @@ module Wren
       when Nil
         LibWren.set_slot_null(_vm, slot)
       else
-        raise "Cannot convert #{typeof(arg)} to Wren"
+        raise "Cannot convert #{typeof(value)} to Wren"
       end
     end
 
-    def get_slot(slot)
+    private def get_slot(slot)
       case LibWren.get_slot_type(_vm, slot)
       when .bool?
         value = LibWren.get_slot_bool(_vm, slot)

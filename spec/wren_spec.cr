@@ -11,10 +11,6 @@ describe Wren do
       ].should contain(String.new(text))
     end
 
-    config.error do |vm, error_type, mod, line, msg|
-      raise Exception.new(String.new(msg))
-    end
-
     vm = Wren::VM.new(config)
 
     result = vm.interpret do
@@ -34,10 +30,6 @@ describe Wren do
         "hello world",
         "\n",
       ].should contain(String.new(text))
-    end
-
-    config.error do |vm, error, mod, line, msg|
-      raise Exception.new(String.new(msg))
     end
 
     vm = Wren::VM.new(config)
@@ -67,10 +59,6 @@ describe Wren do
       ].should contain(String.new(text))
     end
 
-    config.error do |vm, error, mod, line, msg|
-      raise Exception.new(String.new(msg))
-    end
-
     vm = Wren::VM.new(config)
 
     vm.bind_method("Math", true, "add(_,_)") do |vm|
@@ -96,5 +84,19 @@ describe Wren do
     result = vm.call("Math", true, "twoplustwo()")
 
     result.should eq(4.0_f64)
+  end
+
+  it "can pass arguments to Wren methods" do
+    vm = Wren::VM.new
+
+    vm.interpret <<-WREN
+    class Math {
+      static add(a, b) {
+        return a + b
+      }
+    }
+    WREN
+
+    vm.call("Math", true, "add(_,_)", 1_f64, 2_f64).should eq(3_f64)
   end
 end

@@ -21,7 +21,7 @@ module Wren
         if method
           method
         else
-          ->(vm : Pointer(LibWren::Vm)) {}
+          raise "No method binding for #{sig}"
         end
       end
 
@@ -37,6 +37,8 @@ module Wren
         if allocate
           methods.allocate = allocate
           methods.finalize = ->(data : Void*) {}
+        else
+          raise "No class binding for #{sig}"
         end
 
         methods

@@ -1,19 +1,19 @@
 module Wren
   struct Config
-    getter config : LibWren::Configuration
+    getter _config : LibWren::Configuration
 
     def initialize
-      @config = uninitialized LibWren::Configuration
-      LibWren.init_configuration(pointerof(@config))
+      @_config = uninitialized LibWren::Configuration
+      LibWren.init_configuration(pointerof(@_config))
     end
 
     macro bind_fn(name)
       def {{ name.id }}=(proc : LibWren::{{ name.name.camelcase.id }}Fn)
-        @config.{{ name.id }}_fn = proc
+        @_config.{{ name.id }}_fn = proc
       end
 
       def {{ name.id }}(&block : LibWren::{{ name.name.camelcase.id }}Fn)
-        @config.{{ name.id }}_fn = block
+        @_config.{{ name.id }}_fn = block
       end
     end
 
@@ -33,16 +33,16 @@ module Wren
   end
 
   class VM
-    getter vm : Pointer(LibWren::Vm)
+    getter _vm : Pointer(LibWren::Vm)
     getter config : Config
 
     def initialize(@config)
-      _config = @config.config
-      @vm = LibWren.new_vm(pointerof(_config))
+      _config = @config._config
+      @_vm = LibWren.new_vm(pointerof(_config))
     end
 
     def finalize
-      LibWren.free_vm(vm)
+      LibWren.free_vm(_vm)
     end
 
     def interpret(mod : String = "main", &) : LibWren::InterpretResult
@@ -51,7 +51,7 @@ module Wren
     end
 
     def interpret(script : String, mod : String = "main") : LibWren::InterpretResult
-      LibWren.interpret(vm, mod.to_unsafe, script.to_unsafe)
+      LibWren.interpret(_vm, mod.to_unsafe, script.to_unsafe)
     end
   end
 end

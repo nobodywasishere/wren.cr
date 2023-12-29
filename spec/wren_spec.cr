@@ -54,23 +54,23 @@ describe Wren do
 
     vm.interpret(script)
 
-    update_handle = LibWren.make_call_handle(vm.vm, "update(_)")
+    update_handle = LibWren.make_call_handle(vm._vm, "update(_)")
 
-    LibWren.ensure_slots(vm.vm, 1)
-    LibWren.get_variable(vm.vm, "main", "GameEngine", 0)
-    game_engine_handle = LibWren.get_slot_handle(vm.vm, 0)
+    LibWren.ensure_slots(vm._vm, 1)
+    LibWren.get_variable(vm._vm, "main", "GameEngine", 0)
+    game_engine_handle = LibWren.get_slot_handle(vm._vm, 0)
 
-    LibWren.set_slot_handle(vm.vm, 0, game_engine_handle)
-    LibWren.set_slot_double(vm.vm, 1, 0.1_f64)
+    LibWren.set_slot_handle(vm._vm, 0, game_engine_handle)
+    LibWren.set_slot_double(vm._vm, 1, 0.1_f64)
 
-    result = LibWren.call(vm.vm, update_handle)
+    result = LibWren.call(vm._vm, update_handle)
 
     result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)
 
-    String.new(LibWren.get_slot_string(vm.vm, 0)).should eq("cheese")
+    String.new(LibWren.get_slot_string(vm._vm, 0)).should eq("cheese")
 
-    LibWren.release_handle(vm.vm, update_handle)
-    LibWren.release_handle(vm.vm, game_engine_handle)
+    LibWren.release_handle(vm._vm, update_handle)
+    LibWren.release_handle(vm._vm, game_engine_handle)
   end
 
   it "can bind a foreign method to a Crystal proc" do
@@ -133,21 +133,21 @@ describe Wren do
       WREN
     end
 
-    twoplus_handle = LibWren.make_call_handle(vm.vm, "twoplustwo()")
+    twoplus_handle = LibWren.make_call_handle(vm._vm, "twoplustwo()")
 
-    LibWren.ensure_slots(vm.vm, 1)
-    LibWren.get_variable(vm.vm, "main", "Math", 0)
-    math_handle = LibWren.get_slot_handle(vm.vm, 0)
+    LibWren.ensure_slots(vm._vm, 1)
+    LibWren.get_variable(vm._vm, "main", "Math", 0)
+    math_handle = LibWren.get_slot_handle(vm._vm, 0)
 
-    LibWren.set_slot_handle(vm.vm, 0, math_handle)
+    LibWren.set_slot_handle(vm._vm, 0, math_handle)
 
-    result = LibWren.call(vm.vm, twoplus_handle)
+    result = LibWren.call(vm._vm, twoplus_handle)
 
     result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)
 
-    LibWren.get_slot_double(vm.vm, 0).should eq(4.0_f64)
+    LibWren.get_slot_double(vm._vm, 0).should eq(4.0_f64)
 
-    LibWren.release_handle(vm.vm, twoplus_handle)
-    LibWren.release_handle(vm.vm, math_handle)
+    LibWren.release_handle(vm._vm, twoplus_handle)
+    LibWren.release_handle(vm._vm, math_handle)
   end
 end

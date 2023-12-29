@@ -56,7 +56,7 @@ module Wren
       get_slot(0)
     end
 
-    private def set_slot(slot, value)
+    def set_slot(slot, value)
       case value
       when Float64
         LibWren.set_slot_double(_vm, slot, value)
@@ -73,7 +73,7 @@ module Wren
       end
     end
 
-    private def get_slot(slot)
+    def get_slot(slot)
       case LibWren.get_slot_type(_vm, slot)
       when .bool?
         value = LibWren.get_slot_bool(_vm, slot)

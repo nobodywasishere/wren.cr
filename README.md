@@ -1,6 +1,6 @@
-# wren
+# wren.cr
 
-TODO: Write a description here
+Crystal bindings to the [Wren](https://wren.io) interpreter.
 
 ## Installation
 
@@ -9,26 +9,37 @@ TODO: Write a description here
    ```yaml
    dependencies:
      wren:
-       github: your-github-user/wren
+       github: nobodywasishere/wren.cr
    ```
 
 2. Run `shards install`
+3. Run `./src/ext/generate.sh`
 
 ## Usage
 
 ```crystal
 require "wren"
+
+vm = Wren::VM.new
+
+vm.bind_method("MyKlass", true, "method(_,_)") do |vm|
+  a = LibWren.get_slot_double(vm, 1)
+  b = LibWren.get_slot_double(vm, 2)
+  LibWren.set_slot_double(vm, 0, a + b)
+end
+
+vm.interpret <<-WREN
+class MyKlass {
+  foreign static method(a, b)
+}
+WREN
+
+puts vm.call("MyKlass", true, "method(_,_)", 1, 2) # => 3.0_f64
 ```
-
-TODO: Write usage instructions here
-
-## Development
-
-TODO: Write development instructions here
 
 ## Contributing
 
-1. Fork it (<https://github.com/your-github-user/wren/fork>)
+1. Fork it (<https://github.com/nobodywasishere/wren.cr/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
@@ -36,4 +47,4 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [Margret Riegert](https://github.com/your-github-user) - creator and maintainer
+- [Margret Riegert](https://github.com/nobodywasishere) - creator and maintainer

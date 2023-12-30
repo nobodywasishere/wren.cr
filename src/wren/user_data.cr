@@ -3,7 +3,7 @@ module Wren
   alias ClassBindings = Hash(String, LibWren::ForeignMethodFn)
   alias SlotHandles = Hash(String, Pointer(LibWren::Handle))
 
-  struct UserData
+  class UserData
     property vm : Wren::VM?
     getter method_bindings = MethodBindings.new
     getter class_bindings = ClassBindings.new

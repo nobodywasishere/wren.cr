@@ -4,4 +4,5 @@ set -e
 
 cd $(dirname "$0")
 
-make download all
+make download
+make all

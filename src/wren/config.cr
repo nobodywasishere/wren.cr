@@ -1,5 +1,5 @@
 module Wren
-  struct Config
+  class Config
     getter user_data : UserData = UserData.new
 
     # :nodoc:

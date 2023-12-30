@@ -61,8 +61,10 @@ module Wren
 
     bind_fn(load_module)
 
+    # Overriding this method will break `Wren::VM#bind_method`
     bind_fn(bind_foreign_method)
 
+    # Overriding this method will break `Wren::VM#bind_class`
     bind_fn(bind_foreign_class)
 
     bind_fn(write)

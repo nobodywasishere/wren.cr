@@ -8,6 +8,8 @@ module Wren
     def initialize(@config = Config.new)
       _config = @config._config
       @_vm = LibWren.new_vm(pointerof(_config))
+
+      config.user_data.vm = self
     end
 
     def interpret(mod : String = "main", & : Proc(String)) : LibWren::InterpretResult
@@ -19,11 +21,13 @@ module Wren
       LibWren.interpret(_vm, mod.to_unsafe, script.to_unsafe)
     end
 
-    def bind_method(klass : String, static? : Bool, signature : String, mod : String = "main", &block : LibWren::ForeignMethodFn)
+    def bind_method(klass : String, static? : Bool, signature : String, mod : String = "main", &block : ForeignMethod)
+      raise "#{mod}.#{klass}.#{static?}.#{signature}: Bound method can't have closures" if block.closure?
       config.user_data.method_bindings[config.user_data.method_sig(mod, klass, static?, signature)] = block
     end
 
     def bind_class(klass : String, mod : String = "main", &block : LibWren::ForeignMethodFn)
+      raise "#{mod}.#{klass}: Bound class allocates can't have closures" if block.closure?
       config.user_data.class_bindings[config.user_data.class_sig(mod, klass)] = block
     end
 
@@ -63,7 +67,7 @@ module Wren
       when Int
         LibWren.set_slot_double(_vm, slot, value.to_f64)
       when String
-        LibWren.set_slot_bytes(_vm, slot, value.to_unsafe, value.size)
+        LibWren.set_slot_string(_vm, slot, value.to_unsafe)
       when Bool
         LibWren.set_slot_bool(_vm, slot, value ? 1 : 0)
       when Nil
@@ -74,7 +78,7 @@ module Wren
     end
 
     def get_slot(slot)
-      case LibWren.get_slot_type(_vm, slot)
+      case type = LibWren.get_slot_type(_vm, slot)
       when .bool?
         value = LibWren.get_slot_bool(_vm, slot)
         value == 1
@@ -85,7 +89,7 @@ module Wren
       when .string?
         String.new LibWren.get_slot_string(_vm, slot)
       else
-        raise "Cannot convert slot #{slot} from Wren"
+        raise "Cannot convert #{type} in slot #{slot} from Wren"
       end
     end
   end

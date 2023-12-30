@@ -4,6 +4,7 @@ module Wren
   alias SlotHandles = Hash(String, Pointer(LibWren::Handle))
 
   struct UserData
+    property vm : Wren::VM?
     getter method_bindings = MethodBindings.new
     getter class_bindings = ClassBindings.new
     getter call_handles = SlotHandles.new

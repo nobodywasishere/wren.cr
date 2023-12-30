@@ -21,7 +21,7 @@ module Wren
       LibWren.interpret(_vm, mod.to_unsafe, script.to_unsafe)
     end
 
-    def bind_method(klass : String, static? : Bool, signature : String, mod : String = "main", &block : ForeignMethod)
+    def bind_method(klass : String, static? : Bool, signature : String, mod : String = "main", &block : LibWren::ForeignMethodFn)
       raise "#{mod}.#{klass}.#{static?}.#{signature}: Bound method can't have closures" if block.closure?
       config.user_data.method_bindings[config.user_data.method_sig(mod, klass, static?, signature)] = block
     end

@@ -58,7 +58,11 @@ module Wren
       config.user_data.class_bindings[config.user_data.class_sig(mod, klass)] = block
     end
 
-    def call(klass : String, signature : String, args = [] of Value, mod = "main")
+    def bind(klass : Wren::Class)
+      klass.bind(self)
+    end
+
+    def call(klass : String, signature : String, args = [] of Value, mod = "main") : Value
       call_handle = get_call_handle(signature)
       klass_handle = get_klass_handle(mod, klass)
 
@@ -78,11 +82,30 @@ module Wren
       get_slot(0)
     end
 
-    def call(handle : Pointer(LibWren::Handle), signature : String, args, static = false, mod = "main")
+    def call(handle : Pointer(LibWren::Handle), signature : String, args = [] of Value, static = false, mod = "main") : Value
       call_handle = get_call_handle(signature)
 
       LibWren.ensure_slots(_vm, args.size + 1)
       LibWren.set_slot_handle(_vm, 0, handle)
+
+      args.each_with_index do |arg, idx|
+        set_slot(idx + 1, arg)
+      end
+
+      result = LibWren.call(_vm, call_handle)
+
+      if result != LibWren::InterpretResult::RESULT_SUCCESS
+        raise "Execution of #{mod}.handle.#{static}.#{signature} failed! #{result}"
+      end
+
+      get_slot(0)
+    end
+
+    def call(value : Value, signature : String, args = [] of Value, static = false, mod = "main") : Value
+      call_handle = get_call_handle(signature)
+
+      LibWren.ensure_slots(_vm, args.size + 1)
+      set_slot(0, value)
 
       args.each_with_index do |arg, idx|
         set_slot(idx + 1, arg)

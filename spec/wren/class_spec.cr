@@ -19,7 +19,6 @@ class MyClass
   end
 
   foreign_def bas do
-    @thing = true
   end
 
   native_def set_width, value do
@@ -32,7 +31,7 @@ class MyClass
 
   native_def self.cheese, round do
     <<-WREN
-      return "cheese wheel " + round
+    return "cheese wheel " + round
     WREN
   end
 end
@@ -62,6 +61,14 @@ describe Wren::Class do
     my_class.bar("kaboom").should eq("goodbye moon! kaboom")
 
     my_class.set_width(1)
-    my_class.get_width.should eq(1)
+
+    vm.call(my_class.instance_handle.not_nil!, "get_width()").should eq(1)
+
+    result = vm.interpret <<-WREN
+    var my_class = MyClass.init()
+    my_class.get_width()
+    WREN
+
+    result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)
   end
 end

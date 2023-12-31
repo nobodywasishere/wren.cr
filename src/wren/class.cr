@@ -162,17 +162,17 @@ module Wren
           packed_user_data = LibWren.get_user_data(_vm)
           user_data = Box(Wren::UserData).unbox(packed_user_data)
 
-          vm = user_data.vm.not_nil!
+          %vm = user_data.vm.not_nil!
 
           {% for idx in (0...block.args.size) %}
-          {{ block.args[idx] }} = vm.get_slot({{ idx }} + 1)
+          {{ block.args[idx] }} = %vm.get_slot({{ idx }} + 1)
           {% end %}
 
           result = begin
             {{ block.body }}
           end
 
-          vm.set_slot(0, result)
+          %vm.set_slot(0, result)
         }
       )
     end
@@ -183,6 +183,8 @@ module Wren
     end
 
     macro included
+      class_property vm : Wren::VM?
+
       # Converts the current class to the equivalent Wren class code
       def self.to_wren : String
         String.build do |s|
@@ -209,17 +211,18 @@ module Wren
         end
         vm.interpret(self.to_wren)
       end
-    end
 
-    def initialize
-      if WREN_METHODS.all? { |method| !method.construct }
-        raise "Wren::Class's cannot be instantiated from Crystal without a construct def"
+      def initialize
+        if WREN_METHODS.all? { |method| !method.construct }
+          raise "Wren::Class's cannot be instantiated from Crystal without a construct def"
+        end
       end
-    end
 
-    def finalize
-      if instance_handle = @instance_handle
-        LibWren.release_handle(@@vm.not_nil!._vm, instance_handle)
+      def finalize
+        # Potential bug here if finalizer called after @@vm has changed
+        if instance_handle = @instance_handle
+          LibWren.release_handle(@@vm.not_nil!._vm, instance_handle)
+        end
       end
     end
   end

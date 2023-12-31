@@ -25,6 +25,8 @@ require "wren"
 
 vm = Wren::VM.new
 
+# Supports low-level interfacing with the VM
+
 vm.bind_method("MyKlass", true, "method(_,_)") do |vm|
   a = LibWren.get_slot_double(vm, 1)
   b = LibWren.get_slot_double(vm, 2)
@@ -37,7 +39,32 @@ class MyKlass {
 }
 WREN
 
-puts vm.call("MyKlass", "method(_,_)", [1, 2]) # => 3.0_f64
+puts vm.call("MyKlass", "method(_,_)", [1, 2]) # => 3.0
+
+vm.interpret <<-WREN
+  System.print(MyKlass.method(1, 2)) // => "3"
+WREN
+
+# Equivalent to above, also supports automatically creating bindings
+
+class MyOtherKlass
+  include Wren::Class
+
+  foreign_def self.method do |a, b|
+    case {a, b}
+    when {Float64, Float64}
+      a + b
+    end
+  end
+end
+
+vm.bind(MyOtherKlass)
+
+puts MyOtherKlass.method(1, 2) # => 3.0
+
+vm.interpret <<-WREN
+  System.print(MyOtherKlass.method(1, 2)) // => "3"
+WREN
 ```
 
 ## Contributing

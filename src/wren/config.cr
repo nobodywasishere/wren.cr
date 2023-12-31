@@ -9,6 +9,10 @@ module Wren
       @_config = uninitialized LibWren::Configuration
       LibWren.init_configuration(pointerof(@_config))
 
+      write do |vm, txt|
+        print String.new(txt)
+      end
+
       error do |vm, error_type, mod, line, msg|
         raise Exception.new(String.new(msg))
       end

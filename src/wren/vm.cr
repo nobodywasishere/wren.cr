@@ -58,7 +58,7 @@ module Wren
       config.user_data.class_bindings[config.user_data.class_sig(mod, klass)] = block
     end
 
-    def bind(klass : Wren::Class)
+    def bind(klass)
       klass.bind(self)
     end
 

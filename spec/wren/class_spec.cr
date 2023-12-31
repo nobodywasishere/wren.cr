@@ -38,13 +38,7 @@ end
 
 describe Wren::Class do
   it "defines a Wren class in Crystal code" do
-    config = Wren::Config.new
-
-    config.write do |_vm, txt|
-      print String.new(txt)
-    end
-
-    vm = Wren::VM.new(config)
+    vm = Wren::VM.new
 
     MyClass.bind(vm)
 
@@ -65,8 +59,8 @@ describe Wren::Class do
     vm.call(my_class.instance_handle.not_nil!, "get_width()").should eq(1)
 
     result = vm.interpret <<-WREN
-    var my_class = MyClass.init()
-    my_class.get_width()
+      var my_class = MyClass.init()
+      my_class.get_width()
     WREN
 
     result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)

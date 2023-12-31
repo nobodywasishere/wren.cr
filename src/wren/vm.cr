@@ -12,6 +12,18 @@ module Wren
       config.user_data.vm = self
     end
 
+    def finalize
+      LibWren.free_vm(_vm)
+
+      config.user_data.call_handles.each do |_, handle|
+        LibWren.release_handle(_vm, handle)
+      end
+
+      config.user_data.slot_handles.each do |_, handle|
+        LibWren.release_handle(_vm, handle)
+      end
+    end
+
     def interpret(mod : String = "main", & : Proc(String)) : LibWren::InterpretResult
       script = yield
       interpret(script, mod)
@@ -31,7 +43,7 @@ module Wren
       config.user_data.class_bindings[config.user_data.class_sig(mod, klass)] = block
     end
 
-    def call(klass, static, signature, *args, mod = "main")
+    def call(klass : String, static : Bool, signature : String, *args, mod = "main")
       unless call_handle = config.user_data.call_handles[signature]?
         call_handle = LibWren.make_call_handle(_vm, signature.to_unsafe)
         config.user_data.call_handles[signature] = call_handle
@@ -60,7 +72,7 @@ module Wren
       get_slot(0)
     end
 
-    def set_slot(slot, value)
+    def set_slot(slot : Int32, value)
       case value
       when Float64
         LibWren.set_slot_double(_vm, slot, value)
@@ -77,7 +89,7 @@ module Wren
       end
     end
 
-    def get_slot(slot)
+    def get_slot(slot : Int32)
       case type = LibWren.get_slot_type(_vm, slot)
       when .bool?
         value = LibWren.get_slot_bool(_vm, slot)

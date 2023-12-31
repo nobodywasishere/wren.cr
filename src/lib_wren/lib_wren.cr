@@ -250,8 +250,11 @@ lib LibWren
     finalize : FinalizerFn
   end
 
+  # The result of a loadModuleFn call.
+  # [source] is the source code for the module, or NULL if the module is not found.
+  # [onComplete] an optional callback that will be called once Wren is done with the result.
   struct LoadModuleResult
-    source : LibC::Char*
+    source : Pointer(LibC::Char)
     on_complete : LoadModuleCompleteFn
     user_data : Void*
   end

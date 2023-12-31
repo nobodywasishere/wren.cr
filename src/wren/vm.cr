@@ -5,6 +5,16 @@ module Wren
 
     getter config : Config
 
+    # Default module dirs are the current directory and the `./wren_modules` folder at the root of this repo.
+    # Additional module dirs to search through can be added with:
+    # ```
+    # vm = Wren::VM.new
+    # vm.module_dirs << "path/to/new/module/dir"
+    # # or
+    # vm.module_dirs << Path["path", "to", "new", "module", "dir"]
+    # ```
+    getter module_dirs : Array(Path | String) = [".", Path[__DIR__, "..", "..", "wren_modules"]]
+
     def initialize(@config = Config.new)
       _config = @config._config
       @_vm = LibWren.new_vm(pointerof(_config))
@@ -13,6 +23,9 @@ module Wren
     end
 
     def finalize
+      # Potential circular dependency, need to remove
+      config.user_data.vm = nil
+
       LibWren.free_vm(_vm)
 
       config.user_data.call_handles.each do |_, handle|

@@ -9,6 +9,7 @@ module Wren
     getter class_bindings = ClassBindings.new
     getter call_handles = SlotHandles.new
     getter slot_handles = SlotHandles.new
+    getter loaded_modules = Hash(String, String).new
 
     def method_sig(mod, klass, static, signature) : String
       mod = String.new(mod) unless mod.is_a?(String)

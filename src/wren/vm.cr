@@ -1,4 +1,6 @@
 module Wren
+  alias Value = String | Bool | Float64 | Nil
+
   class VM
     # :nodoc:
     getter _vm : Pointer(LibWren::Vm)
@@ -56,18 +58,9 @@ module Wren
       config.user_data.class_bindings[config.user_data.class_sig(mod, klass)] = block
     end
 
-    def call(klass : String, static : Bool, signature : String, *args, mod = "main")
-      unless call_handle = config.user_data.call_handles[signature]?
-        call_handle = LibWren.make_call_handle(_vm, signature.to_unsafe)
-        config.user_data.call_handles[signature] = call_handle
-      end
-
-      unless klass_handle = config.user_data.slot_handles[config.user_data.class_sig(mod, klass)]?
-        LibWren.ensure_slots(_vm, 1)
-        LibWren.get_variable(_vm, mod, klass, 0)
-        klass_handle = LibWren.get_slot_handle(_vm, 0)
-        config.user_data.slot_handles[config.user_data.class_sig(mod, klass)] = klass_handle
-      end
+    def call(klass : String, signature : String, args = [] of Value, mod = "main")
+      call_handle = get_call_handle(signature)
+      klass_handle = get_klass_handle(mod, klass)
 
       LibWren.ensure_slots(_vm, args.size + 1)
       LibWren.set_slot_handle(_vm, 0, klass_handle)
@@ -79,18 +72,55 @@ module Wren
       result = LibWren.call(_vm, call_handle)
 
       if result != LibWren::InterpretResult::RESULT_SUCCESS
-        raise "Execution of #{mod}.#{klass}.#{static}.#{signature} failed! #{result}"
+        raise "Execution of #{mod}.#{klass}.true.#{signature} failed! #{result}"
       end
 
       get_slot(0)
     end
 
-    def set_slot(slot : Int32, value)
+    def call(handle : Pointer(LibWren::Handle), signature : String, args, static = false, mod = "main")
+      call_handle = get_call_handle(signature)
+
+      LibWren.ensure_slots(_vm, args.size + 1)
+      LibWren.set_slot_handle(_vm, 0, handle)
+
+      args.each_with_index do |arg, idx|
+        set_slot(idx + 1, arg)
+      end
+
+      result = LibWren.call(_vm, call_handle)
+
+      if result != LibWren::InterpretResult::RESULT_SUCCESS
+        raise "Execution of #{mod}.handle.#{static}.#{signature} failed! #{result}"
+      end
+
+      get_slot(0)
+    end
+
+    def construct(klass : String, signature : String, *args, mod = "main") : Pointer(LibWren::Handle)
+      call_handle = get_call_handle(signature)
+      klass_handle = get_klass_handle(mod, klass)
+
+      LibWren.ensure_slots(_vm, args.size + 1)
+      LibWren.set_slot_handle(_vm, 0, klass_handle)
+
+      args.each_with_index do |arg, idx|
+        set_slot(idx + 1, arg)
+      end
+
+      result = LibWren.call(_vm, call_handle)
+
+      if result != LibWren::InterpretResult::RESULT_SUCCESS
+        raise "Execution of #{mod}.#{klass}.true.#{signature} failed! #{result}"
+      end
+
+      LibWren.get_slot_handle(_vm, 0)
+    end
+
+    def set_slot(slot : Int32, value : Value)
       case value
       when Float64
         LibWren.set_slot_double(_vm, slot, value)
-      when Int
-        LibWren.set_slot_double(_vm, slot, value.to_f64)
       when String
         LibWren.set_slot_string(_vm, slot, value.to_unsafe)
       when Bool
@@ -102,7 +132,7 @@ module Wren
       end
     end
 
-    def get_slot(slot : Int32)
+    def get_slot(slot : Int32) : Value
       case type = LibWren.get_slot_type(_vm, slot)
       when .bool?
         value = LibWren.get_slot_bool(_vm, slot)
@@ -116,6 +146,25 @@ module Wren
       else
         raise "Cannot convert #{type} in slot #{slot} from Wren"
       end
+    end
+
+    private def get_call_handle(signature : String)
+      unless handle = config.user_data.call_handles[signature]?
+        handle = LibWren.make_call_handle(_vm, signature.to_unsafe)
+        config.user_data.call_handles[signature] = handle
+      end
+      handle
+    end
+
+    private def get_klass_handle(mod, klass)
+      unless handle = config.user_data.slot_handles[config.user_data.class_sig(mod, klass)]?
+        LibWren.ensure_slots(_vm, 1)
+        LibWren.get_variable(_vm, mod, klass, 0)
+        handle = LibWren.get_slot_handle(_vm, 0)
+        config.user_data.slot_handles[config.user_data.class_sig(mod, klass)] = handle
+      end
+
+      handle
     end
   end
 end

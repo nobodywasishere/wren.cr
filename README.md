@@ -37,7 +37,7 @@ class MyKlass {
 }
 WREN
 
-puts vm.call("MyKlass", true, "method(_,_)", 1, 2) # => 3.0_f64
+puts vm.call("MyKlass", "method(_,_)", [1, 2]) # => 3.0_f64
 ```
 
 ## Contributing

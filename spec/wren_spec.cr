@@ -47,7 +47,7 @@ describe Wren do
     result = vm.interpret(script)
     result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)
 
-    vm.call("GameEngine", true, "update(_)").should eq("cheese")
+    vm.call("GameEngine", "update(_)").should eq("cheese")
   end
 
   it "can bind a foreign method to a Crystal proc" do
@@ -84,7 +84,7 @@ describe Wren do
 
     result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)
 
-    result = vm.call("Math", true, "twoplustwo()")
+    result = vm.call("Math", "twoplustwo()")
 
     result.should eq(4.0_f64)
   end
@@ -102,7 +102,7 @@ describe Wren do
 
     result.should eq(LibWren::InterpretResult::RESULT_SUCCESS)
 
-    vm.call("Math", true, "add(_,_)", 1_f64, 2_f64).should eq(3_f64)
+    vm.call("Math", "add(_,_)", [1_f64, 2_f64]).should eq(3_f64)
   end
 
   it "can load modules by name" do

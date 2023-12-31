@@ -95,7 +95,7 @@ module Wren
         sig = build_sig({{ name }}) { {% if args.size > 0 %}|{{ args.splat }}|{% end %} }
         {% if name.id.starts_with?("self.") %}
           {% if construct %}
-            ihandle = @@vm.not_nil!.construct({{ @type.stringify }}, sig, {{ args.splat }})
+            ihandle = @@vm.not_nil!.construct({{ @type.stringify }}, sig, [{{ args.splat }}] of Wren::Value)
             item = self.new
             item.instance_handle = ihandle
             item
@@ -162,7 +162,7 @@ module Wren
           packed_user_data = LibWren.get_user_data(_vm)
           user_data = Box(Wren::UserData).unbox(packed_user_data)
 
-          %vm = user_data.vm.not_nil!
+          %vm = user_data.vm.not_nil!.value.not_nil!
 
           {% for idx in (0...block.args.size) %}
           {{ block.args[idx] }} = %vm.get_slot({{ idx }} + 1)

@@ -7,21 +7,10 @@ module Wren
 
     getter config : Config
 
-    # Default module dirs are the current directory and the `./wren_modules` folder at the root of this repo.
-    # Additional module dirs to search through can be added with:
-    # ```
-    # vm = Wren::VM.new
-    # vm.module_dirs << "path/to/new/module/dir"
-    # # or
-    # vm.module_dirs << Path["path", "to", "new", "module", "dir"]
-    # ```
-    getter module_dirs : Array(Path | String) = [".", Path[__DIR__, "..", "..", "wren_modules"]]
-
     def initialize(@config = Config.new)
-      _config = @config._config
-      @_vm = LibWren.new_vm(pointerof(_config))
+      @_vm = LibWren.new_vm(@config._config_ptr)
 
-      config.user_data.vm = self
+      config.user_data.vm = WeakRef.new(self)
     end
 
     def finalize
@@ -37,6 +26,14 @@ module Wren
       config.user_data.slot_handles.each do |_, handle|
         LibWren.release_handle(_vm, handle)
       end
+
+      config.user_data.method_bindings = MethodBindings.new
+      config.user_data.class_bindings = ClassBindings.new
+
+      GC.free(config.user_data.module_dirs.as(Void*))
+      GC.free(config.user_data.as(Void*))
+      GC.free(config.as(Void*))
+      GC.free(self.as(Void*))
     end
 
     def interpret(mod : String = "main", & : Proc(String)) : LibWren::InterpretResult
@@ -69,9 +66,7 @@ module Wren
       LibWren.ensure_slots(_vm, args.size + 1)
       LibWren.set_slot_handle(_vm, 0, klass_handle)
 
-      args.each_with_index do |arg, idx|
-        set_slot(idx + 1, arg)
-      end
+      set_slots(args, start: 1)
 
       result = LibWren.call(_vm, call_handle)
 
@@ -88,9 +83,7 @@ module Wren
       LibWren.ensure_slots(_vm, args.size + 1)
       LibWren.set_slot_handle(_vm, 0, handle)
 
-      args.each_with_index do |arg, idx|
-        set_slot(idx + 1, arg)
-      end
+      set_slots(args, start: 1)
 
       result = LibWren.call(_vm, call_handle)
 
@@ -107,9 +100,7 @@ module Wren
       LibWren.ensure_slots(_vm, args.size + 1)
       set_slot(0, value)
 
-      args.each_with_index do |arg, idx|
-        set_slot(idx + 1, arg)
-      end
+      set_slots(args, start: 1)
 
       result = LibWren.call(_vm, call_handle)
 
@@ -120,16 +111,14 @@ module Wren
       get_slot(0)
     end
 
-    def construct(klass : String, signature : String, *args, mod = "main") : Pointer(LibWren::Handle)
+    def construct(klass : String, signature : String, args = [] of Value, mod = "main") : Pointer(LibWren::Handle)
       call_handle = get_call_handle(signature)
       klass_handle = get_klass_handle(mod, klass)
 
       LibWren.ensure_slots(_vm, args.size + 1)
       LibWren.set_slot_handle(_vm, 0, klass_handle)
 
-      args.each_with_index do |arg, idx|
-        set_slot(idx + 1, arg)
-      end
+      set_slots(args, start: 1)
 
       result = LibWren.call(_vm, call_handle)
 
@@ -153,6 +142,13 @@ module Wren
       else
         raise "Cannot convert #{typeof(value)} to Wren"
       end
+    end
+
+    def set_slots(args : Array(Value), start : Int32 = 0)
+      args.each_with_index do |arg, idx|
+        set_slot(start + idx, arg)
+      end
+      GC.free(args.as(Void*))
     end
 
     def get_slot(slot : Int32) : Value
@@ -180,11 +176,12 @@ module Wren
     end
 
     private def get_klass_handle(mod, klass)
-      unless handle = config.user_data.slot_handles[config.user_data.class_sig(mod, klass)]?
+      sig = config.user_data.class_sig(mod, klass)
+      unless handle = config.user_data.slot_handles[sig]?
         LibWren.ensure_slots(_vm, 1)
         LibWren.get_variable(_vm, mod, klass, 0)
         handle = LibWren.get_slot_handle(_vm, 0)
-        config.user_data.slot_handles[config.user_data.class_sig(mod, klass)] = handle
+        config.user_data.slot_handles[sig] = handle
       end
 
       handle

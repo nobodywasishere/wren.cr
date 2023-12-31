@@ -1,3 +1,5 @@
+require "weak_ref"
+
 require "./lib_wren/lib_wren.cr"
 
 require "./wren/config.cr"

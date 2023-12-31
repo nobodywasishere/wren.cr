@@ -4,10 +4,12 @@ module Wren
 
     # :nodoc:
     getter _config : LibWren::Configuration
+    getter _config_ptr : Pointer(LibWren::Configuration)
 
     def initialize
       @_config = uninitialized LibWren::Configuration
-      LibWren.init_configuration(pointerof(@_config))
+      @_config_ptr = pointerof(@_config)
+      LibWren.init_configuration(@_config_ptr)
 
       write do |vm, txt|
         print String.new(txt)
@@ -66,26 +68,24 @@ module Wren
         }
         result.user_data = Pointer(Void).null
 
-        if (vm = user_data.vm)
-          vm.module_dirs.each do |dir|
-            if File.exists?(mod_path = Path[dir, mod]) || File.exists?(mod_path = Path[dir, mod + ".wren"])
-              source = File.read(mod_path)
-              result.source = source.to_unsafe
-              user_data.loaded_modules[mod] = source
-              break
-            end
+        user_data.module_dirs.each do |dir|
+          if File.exists?(mod_path = Path[dir, mod]) || File.exists?(mod_path = Path[dir, mod + ".wren"])
+            source = File.read(mod_path)
+            result.source = source.to_unsafe
+            user_data.loaded_modules[mod] = source
+            break
           end
         end
 
         result
       end
 
-      @_config.user_data = Box.box(@user_data)
+      @_config_ptr.value.user_data = Box.box(@user_data)
     end
 
     macro bind_fn(name)
       def {{ name.id }}(&block : LibWren::{{ name.name.camelcase.id }}Fn)
-        @_config.{{ name.id }}_fn = block
+        @_config_ptr.value.{{ name.id }}_fn = block
       end
     end
 

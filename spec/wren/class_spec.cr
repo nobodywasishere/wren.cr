@@ -42,9 +42,9 @@ describe Wren::Class do
 
     MyClass.bind(vm)
 
-    MyClass.foo(10, 20).should eq(30)
+    MyClass.foo(10_f64, 20_f64).should eq(30)
 
-    vm.call("MyClass", "foo(_,_)", [10, 20]).should eq(30)
+    vm.call("MyClass", "foo(_,_)", [10_f64, 20_f64]).should eq(30)
 
     MyClass.cheese("go round").should eq("cheese wheel go round")
 
@@ -54,7 +54,7 @@ describe Wren::Class do
 
     my_class.bar("kaboom").should eq("goodbye moon! kaboom")
 
-    my_class.set_width(1)
+    my_class.set_width(1_f64)
 
     vm.call(my_class.instance_handle.not_nil!, "get_width()").should eq(1)
 

@@ -4,12 +4,22 @@ module Wren
   alias SlotHandles = Hash(String, Pointer(LibWren::Handle))
 
   class UserData
-    property vm : Wren::VM?
-    getter method_bindings = MethodBindings.new
-    getter class_bindings = ClassBindings.new
-    getter call_handles = SlotHandles.new
-    getter slot_handles = SlotHandles.new
+    property vm : WeakRef(Wren::VM)?
+    property method_bindings = MethodBindings.new
+    property class_bindings = ClassBindings.new
+    property call_handles = SlotHandles.new
+    property slot_handles = SlotHandles.new
     getter loaded_modules = Hash(String, String).new
+
+    # Default module dirs are the current directory and the `./wren_modules` folder at the root of this repo.
+    # Additional module dirs to search through can be added with:
+    # ```
+    # vm = Wren::VM.new
+    # vm.config.user_data.module_dirs << "path/to/new/module/dir"
+    # # or
+    # vm.config.user_data.module_dirs << Path["path", "to", "new", "module", "dir"].to_s
+    # ```
+    getter module_dirs : Array(String) = [".", Path[__DIR__, "..", "..", "wren_modules"].to_s]
 
     def method_sig(mod, klass, static, signature) : String
       mod = String.new(mod) unless mod.is_a?(String)

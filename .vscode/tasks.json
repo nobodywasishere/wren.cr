@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build crystal specs",
+      "type": "shell",
+      "command": "crystal build spec/*.cr -o bin/spec --debug"
+    }
+  ]
+}

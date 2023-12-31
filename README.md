@@ -2,6 +2,9 @@
 
 Crystal bindings to the [Wren](https://wren.io) interpreter.
 
+Includes additional libraries / utilities out of the box:
+- [wren-json](https://github.com/brandly/wren-json)
+
 ## Installation
 
 1. Add the dependency to your `shard.yml`:
